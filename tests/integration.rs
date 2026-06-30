@@ -4,6 +4,7 @@ use altertable_lakehouse::{
 use futures_util::StreamExt;
 use serde_json::json;
 use std::collections::HashMap;
+use std::time::Duration;
 use testcontainers::{
     core::{ImageExt, IntoContainerPort},
     runners::AsyncRunner,
@@ -26,6 +27,7 @@ async fn spawn_mock() -> (ContainerAsync<GenericImage>, String) {
         .await
         .expect("failed to read mapped port");
     let base_url = format!("http://127.0.0.1:{port}");
+    tokio::time::sleep(Duration::from_millis(500)).await;
     (container, base_url)
 }
 

@@ -278,7 +278,7 @@ impl AltertableClient {
         ensure_non_empty("schema", schema)?;
         ensure_non_empty("table", table)?;
 
-        let mut query = vec![
+        let query = vec![
             ("catalog", catalog.to_string()),
             ("schema", schema.to_string()),
             ("table", table.to_string()),
