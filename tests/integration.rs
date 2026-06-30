@@ -1,5 +1,5 @@
 use altertable_lakehouse::{
-    AltertableClient, AppendRequest, AutocompleteRequest, QueryRequest, UpsertMode, ValidateRequest,
+    AltertableClient, AppendRequest, AutocompleteRequest, QueryRequest, UploadMode, ValidateRequest,
 };
 use futures_util::StreamExt;
 use serde_json::json;
@@ -128,7 +128,7 @@ async fn query_log_and_cancel_endpoints_work_against_mock() {
 }
 
 #[tokio::test]
-async fn append_and_upsert_return_mock_responses() {
+async fn append_upload_and_upsert_return_mock_responses() {
     let (_container, base_url) = spawn_mock().await;
     let client = client(base_url);
 
@@ -155,18 +155,17 @@ async fn append_and_upsert_return_mock_responses() {
         assert_eq!(task.task_id, task_id);
     }
 
-    let upsert_error = client
-        .upsert(
+    let upload_error = client
+        .upload(
             "demo",
             "public",
             "events",
-            Some(UpsertMode::Append),
-            None,
+            UploadMode::Append,
             b"id,name\n1,Ada\n".to_vec(),
         )
         .await
-        .expect_err("upsert should fail against missing catalog");
-    assert!(upsert_error
+        .expect_err("upload should fail against missing catalog");
+    assert!(upload_error
         .to_string()
         .contains("Catalog \"demo\" does not exist"));
 }

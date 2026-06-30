@@ -1,7 +1,7 @@
 use crate::error::{AltertableError, ErrorContext};
 use crate::models::{
     AppendRequest, AppendResponse, AutocompleteRequest, AutocompleteResponse, CancelQueryResponse,
-    QueryColumn, QueryLogResponse, QueryMetadata, QueryRequest, QueryRow, TaskResponse, UpsertMode,
+    QueryColumn, QueryLogResponse, QueryMetadata, QueryRequest, QueryRow, TaskResponse, UploadMode,
     ValidateRequest, ValidateResponse,
 };
 use base64::Engine;
@@ -266,14 +266,12 @@ impl AltertableClient {
         .await
     }
 
-    #[allow(clippy::too_many_arguments)]
-    pub async fn upsert(
+    pub async fn upload(
         &self,
         catalog: &str,
         schema: &str,
         table: &str,
-        mode: Option<UpsertMode>,
-        primary_key: Option<&str>,
+        mode: UploadMode,
         bytes: Vec<u8>,
     ) -> Result<TaskResponse, AltertableError> {
         ensure_non_empty("catalog", catalog)?;
@@ -284,16 +282,48 @@ impl AltertableClient {
             ("catalog", catalog.to_string()),
             ("schema", schema.to_string()),
             ("table", table.to_string()),
-        ];
-        if let Some(mode) = mode {
-            query.push((
+            (
                 "mode",
-                serde_plain::to_string(&mode).unwrap_or_else(|_| "upsert".to_string()),
-            ));
-        }
-        if let Some(primary_key) = primary_key {
-            query.push(("primary_key", primary_key.to_string()));
-        }
+                serde_plain::to_string(&mode).unwrap_or_else(|_| "append".to_string()),
+            ),
+        ];
+
+        let response = self
+            .request("upload", Method::POST, "/upload")
+            .query(&query)
+            .body(bytes)
+            .send()
+            .await
+            .map_err(|error| {
+                AltertableError::from_reqwest(
+                    error,
+                    error_context("upload", "POST", "/upload", None, false, None),
+                )
+            })?;
+
+        self.decode_response("upload", Method::POST, "/upload", response)
+            .await
+    }
+
+    pub async fn upsert(
+        &self,
+        catalog: &str,
+        schema: &str,
+        table: &str,
+        primary_key: &str,
+        bytes: Vec<u8>,
+    ) -> Result<TaskResponse, AltertableError> {
+        ensure_non_empty("catalog", catalog)?;
+        ensure_non_empty("schema", schema)?;
+        ensure_non_empty("table", table)?;
+        ensure_non_empty("primary_key", primary_key)?;
+
+        let query = vec![
+            ("catalog", catalog.to_string()),
+            ("schema", schema.to_string()),
+            ("table", table.to_string()),
+            ("primary_key", primary_key.to_string()),
+        ];
 
         let response = self
             .request("upsert", Method::POST, "/upsert")

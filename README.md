@@ -4,11 +4,11 @@ Official Rust SDK for the Altertable Lakehouse API.
 
 ## Features
 
-- Typed client for `append`, `get_task`, `query`, `query_all`, `upsert`, `get_query`, `cancel_query`, `validate`, and `autocomplete`
+- Typed client for `append`, `get_task`, `query`, `query_all`, `upload`, `upsert`, `get_query`, `cancel_query`, `validate`, and `autocomplete`
 - Basic auth via direct credentials, pre-encoded token, or environment discovery
 - Streamed NDJSON query support with accumulated `query_all`
 - `reqwest` + `rustls` transport with keep-alive and sensible timeout defaults
-- Mock-backed integration coverage via Testcontainers for query, query_all, get_query, cancel_query, validate, autocomplete, append, and upsert
+- Mock-backed integration coverage via Testcontainers for query, query_all, get_query, cancel_query, validate, autocomplete, append, upload, and upsert
 - Request-level coverage for serialization, auth, request validation, and query parsing
 
 ## Installation
@@ -179,10 +179,29 @@ client
 # Ok(()) }
 ```
 
+### upload
+
+```rust
+# use altertable_lakehouse::{AltertableClient, UploadMode};
+# #[tokio::main]
+# async fn main() -> Result<(), Box<dyn std::error::Error>> {
+# let client = AltertableClient::builder().credentials("testuser", "testpass").base_url("http://localhost:15000").build()?;
+client
+    .upload(
+        "demo",
+        "public",
+        "users",
+        UploadMode::Append,
+        b"id,name\n1,Ada\n".to_vec(),
+    )
+    .await?;
+# Ok(()) }
+```
+
 ### upsert
 
 ```rust
-# use altertable_lakehouse::{AltertableClient, UpsertMode};
+# use altertable_lakehouse::AltertableClient;
 # #[tokio::main]
 # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 # let client = AltertableClient::builder().credentials("testuser", "testpass").base_url("http://localhost:15000").build()?;
@@ -191,8 +210,7 @@ client
         "demo",
         "public",
         "users",
-        Some(UpsertMode::Append),
-        None,
+        "id",
         b"id,name\n1,Ada\n".to_vec(),
     )
     .await?;

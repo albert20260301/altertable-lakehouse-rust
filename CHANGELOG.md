@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Features
+
+* split upload and upsert APIs for client specs v0.12.0
+
 ## [0.2.1](https://github.com/altertable-ai/altertable-lakehouse-rust/compare/altertable-lakehouse-v0.2.0...altertable-lakehouse-v0.2.1) (2026-06-10)
 
 
